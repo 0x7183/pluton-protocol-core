@@ -1,5 +1,5 @@
 [package]
-name = "void"
+name = "pluton"
 version = "0.2.0"
 authors = ["Mohammadsadegh Najafi <MSNTCS@users.noreply.github.com>"]
 edition = "2018"
