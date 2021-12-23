@@ -2,7 +2,6 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
-    Uint128,
 };
 use crate::handler::core as Core;
 use crate::handler::query as Query;
@@ -37,7 +36,7 @@ pub fn instantiate(
   
     let config_data = Config {
 
-        deposit_count: Uint128::new(1),
+        deposit_count: 0,
         stable_denom: msg.stable_denom,
         moneymarket: deps.api.addr_canonicalize(msg.moneymarket.as_str())?,
         aterra_address: deps.api.addr_canonicalize(msg.aterra_address.as_str())?,

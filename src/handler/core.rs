@@ -68,10 +68,21 @@ pub fn execute_deposit(
             },
         )?;
     }
- 
+
+    let new_deposit_count = config.deposit_count + 1;
+
+    CONFIG.update(
+        deps.storage,
+        |x| -> StdResult<_> {
+            let mut config = x;
+            config.deposit_count = new_deposit_count;
+            Ok(config)
+        },
+    )?;
+
     DEPOSIT.save(
         deps.storage,
-        (&deposit_addr, &config.deposit_count.to_string()),
+        (&deposit_addr, &new_deposit_count.to_string()),
         &PoolInfo {
             amount: Uint256::from(coin_amount),
             denom: stable_denom,
@@ -157,7 +168,7 @@ pub fn deposit(
     .amount;
 
     let aust_amount = Uint256::from(ust_amount).div(epoch_state.exchange_rate);
-
+    
     DEPOSIT.update(
         deps.storage,
         (&deposit_addr, &config.deposit_count.to_string()),

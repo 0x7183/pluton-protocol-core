@@ -26,7 +26,7 @@ impl PoolInfo {
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
 #[serde(rename_all = "snake_case")]
 pub struct Config {
-    pub deposit_count: Uint128,
+    pub deposit_count: i32,
     pub stable_denom: String,
     pub aterra_address: CanonicalAddr,
     pub moneymarket: CanonicalAddr
