@@ -10,7 +10,6 @@ use crate::msg::ExecuteMsg;
 use crate::msg::InstantiateMsg;
 use crate::msg::QueryMsg;
 
-use crate::querier::anchor::claimable_reward;
 
 use cw2::set_contract_version;
 use crate::error::ContractError;
@@ -61,13 +60,9 @@ pub fn execute(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::Balance { address } => to_binary(&Query::query_balance(deps, address)?),
-        QueryMsg::DepositBalance {
-            address,
-            passphrase,
-        } => to_binary(&Query::query_deposit(deps, address, passphrase)?),
-        QueryMsg::WithdrawableInterest { sender, passphrase } => {
-            claimable_reward(deps, _env, passphrase, sender)
-        }
+        QueryMsg::BeneficiaryBalance { address, passphrase } => to_binary(&Query::query_beneficiary(deps, _env, address, passphrase)?),
+        QueryMsg::DepositorBalance {address, passphrase,} => to_binary(&Query::query_depositor(deps, address, passphrase)?),
+        QueryMsg::Balance { address } => to_binary(&Query::query_test(deps, address)?),
+        
     }
 }

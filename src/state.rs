@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Uint128, CanonicalAddr};
+use cosmwasm_std::{CanonicalAddr};
 use cosmwasm_bignumber::Uint256;
 use cw_storage_plus::{Item, Map};
 
@@ -32,7 +32,9 @@ pub struct Config {
     pub moneymarket: CanonicalAddr
 }
 
+
+
 pub const POOL_INFO: Item<PoolInfo> = Item::new("pool_info");
-pub const DEPOSIT: Map<(&str, &str), PoolInfo> = Map::new("deposit");
+pub const DEPOSITORS: Map<(&str, &str), PoolInfo> = Map::new("depositors");
+pub const BENEFICIARIES: Map<(&str, &str), PoolInfo> = Map::new("beneficiaries");
 pub const CONFIG: Item<Config> = Item::new("config");
-pub const BALANCES: Map<&str, Uint128> = Map::new("balance");

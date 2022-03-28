@@ -3,6 +3,9 @@ use cosmwasm_std::{StdError, StdResult};
 // use cw20::Cw20ReceiveMsg;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+
+use crate::state::PoolInfo;
+
 #[derive(Serialize, Deserialize, JsonSchema)]
 pub struct InstantiateMsg {
     pub contract: String,
@@ -53,18 +56,18 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     /// Returns the current balance of the given address, 0 if unset.
     /// Return type: BalanceResponse.
-    Balance {
+    BeneficiaryBalance {
         address: String,
+        passphrase: String,
     },
-    DepositBalance {
+    DepositorBalance {
         address: String,
         passphrase: String,
     },
 
-    WithdrawableInterest {
-        sender: String,
-        passphrase: String,
-    },
+    Balance {
+        address: String,
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -76,9 +79,22 @@ pub struct ClaimableRewardResponse {
 
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
-pub struct PoolInfoResponse {
+pub struct DepositorsResponse {
+    pub beneficiary_addr: String,
     pub amount: Uint256,
-    pub denom: String,
     pub aust_amount: Option<Uint256>,
-    pub exchange_rate_prev: Option<String>,
+    pub denom: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+pub struct BeneficiariesResponse{
+    pub depositor_addr: String,
+    pub beneficiary_amount: Uint256,
+    pub amount: Uint256,
+    pub claimable: Uint256,
+}
+
+#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+pub struct TestResponse {
+    pub test: Vec<PoolInfo>,
 }

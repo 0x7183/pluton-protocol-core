@@ -8,7 +8,7 @@ use crate::querier::anchor::claimable_reward;
 
 use crate::error::ContractError;
 use crate::msg::ClaimableRewardResponse;
-use crate::state::{PoolInfo, BALANCES, CONFIG, DEPOSIT};
+use crate::state::{PoolInfo, CONFIG, DEPOSITORS, BENEFICIARIES};
 
 use cosmwasm_bignumber::{Uint256};
 use std::ops::Sub;
@@ -54,21 +54,6 @@ pub fn execute_deposit(
     }
 
     let deposit_addr = info.sender.to_string();
-
-    let first_deposit = BALANCES.has(deps.storage, &deposit_addr);
-
-    if first_deposit {
-        BALANCES.save(deps.storage, &deposit_addr, &Uint128::from(coin_amount))?;
-    } else {
-        BALANCES.update(
-            deps.storage,
-            &deposit_addr,
-            |balance: Option<Uint128>| -> StdResult<_> {
-                Ok(balance.unwrap_or_default() + Uint128::from(coin_amount))
-            },
-        )?;
-    }
-
     let new_deposit_count = config.deposit_count + 1;
 
     CONFIG.update(
@@ -80,18 +65,26 @@ pub fn execute_deposit(
         },
     )?;
 
-    DEPOSIT.save(
+    let pool = PoolInfo {
+        amount: Uint256::from(coin_amount),
+        denom: stable_denom,
+        aust_amount: None,
+        exchange_rate_prev: None,
+        depositor_addr: deposit_addr.clone(),
+        beneficiary_addr: beneficiary.clone(),
+        beneficiary_amount: beneficiary_amount,
+    };
+
+    DEPOSITORS.save(
         deps.storage,
         (&deposit_addr, &new_deposit_count.to_string()),
-        &PoolInfo {
-            amount: Uint256::from(coin_amount),
-            denom: stable_denom,
-            aust_amount: None,
-            exchange_rate_prev: None,
-            depositor_addr: deposit_addr.clone(),
-            beneficiary_addr: beneficiary,
-            beneficiary_amount: beneficiary_amount,
-        },
+        &pool.clone()
+    )?;
+    
+    BENEFICIARIES.save(
+        deps.storage,
+        (&beneficiary, &new_deposit_count.to_string()),
+        &pool.clone()
     )?;
 
     deposit(deps, _env, info, coin_amount, &deposit_addr)
@@ -104,7 +97,7 @@ pub fn execute_withdrawal(
     info: MessageInfo,
     passphrase: String,
 ) -> Result<Response, ContractError> {
-    let pool = DEPOSIT.load(deps.storage, (&info.sender.to_string(), &passphrase))?;
+    let pool = DEPOSITORS.load(deps.storage, (&info.sender.to_string(), &passphrase))?;
     let aust_amount: Uint256 = pool.aust_amount.unwrap();
     let amount = pool.amount;
     if amount == Uint256::zero() {
@@ -133,7 +126,8 @@ pub fn execute_withdrawal(
         return Err(ContractError::NoBalance {});
     } 
 
-    DEPOSIT.remove(deps.storage, (&info.sender.to_string(), &passphrase));
+    DEPOSITORS.remove(deps.storage, (&info.sender.to_string(), &passphrase));
+    BENEFICIARIES.remove(deps.storage, (&pool.beneficiary_addr, &passphrase));
 
     redeem(
         deps.as_ref(),
@@ -144,7 +138,6 @@ pub fn execute_withdrawal(
         bnf_addr,
     )
 }
-
 
 
 pub fn deposit(
@@ -169,7 +162,7 @@ pub fn deposit(
 
     let aust_amount = Uint256::from(ust_amount).div(epoch_state.exchange_rate);
     
-    DEPOSIT.update(
+    DEPOSITORS.update(
         deps.storage,
         (&deposit_addr, &config.deposit_count.to_string()),
         |x| -> StdResult<_> {

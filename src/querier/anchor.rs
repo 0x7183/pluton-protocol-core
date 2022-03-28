@@ -12,7 +12,7 @@ use terra_cosmwasm::TerraQuerier;
 
 use crate::{
     msg,
-    state::{CONFIG, DEPOSIT},
+    state::{CONFIG, DEPOSITORS},
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -132,7 +132,7 @@ pub fn claimable_reward(
 ) -> StdResult<Binary> {
     let config = CONFIG.load(deps.storage).unwrap();
 
-    let pool = DEPOSIT.load(deps.storage, (&sender.to_string(), &passphrase))?;
+    let pool = DEPOSITORS.load(deps.storage, (&sender.to_string(), &passphrase))?;
 
     let epoch_state = epoch_state(deps, _env, &config.moneymarket)?;
     let atoken_balance_user = balance_of(
