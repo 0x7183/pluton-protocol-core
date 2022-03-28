@@ -1,1 +1,1 @@
-e3a349ad8a4923f207e2736cf8f423e3ecf7b2fce723e0ab70b5826b23cae31a  pluton.wasm
+b153586ee4fd715e7339daebee9af05cbc63c1a73633754c68b779dca45e4aa8  pluton.wasm

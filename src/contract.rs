@@ -52,7 +52,7 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::Withdrawal {passphrase,} => Core::execute_withdrawal(deps, env, info, passphrase),
+        ExecuteMsg::Withdrawal {id,} => Core::execute_withdrawal(deps, env, info, id),
         ExecuteMsg::Deposit { denom, beneficiary, beneficiary_amount } => Core::execute_deposit(deps, env, info, denom, beneficiary, beneficiary_amount),
     }
 }
@@ -60,9 +60,11 @@ pub fn execute(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::BeneficiaryBalance { address, passphrase } => to_binary(&Query::query_beneficiary(deps, _env, address, passphrase)?),
-        QueryMsg::DepositorBalance {address, passphrase,} => to_binary(&Query::query_depositor(deps, address, passphrase)?),
-        QueryMsg::Balance { address } => to_binary(&Query::query_test(deps, address)?),
+        
+        QueryMsg::BeneficiaryBalance { address} => to_binary(&Query::query_beneficiary(deps, address)?),
+        QueryMsg::DepositorBalance {address} => to_binary(&Query::query_depositor(deps, address)?),
+        QueryMsg::Incoming { address, id } => to_binary(&Query::query_interest(deps, _env, address, id)?),
+        QueryMsg::Outgoing { address, id } => to_binary(&Query::query_deposit(deps, address, id)?),
         
     }
 }

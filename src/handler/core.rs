@@ -66,6 +66,7 @@ pub fn execute_deposit(
     )?;
 
     let pool = PoolInfo {
+        id: new_deposit_count.to_string(),
         amount: Uint256::from(coin_amount),
         denom: stable_denom,
         aust_amount: None,
@@ -95,9 +96,9 @@ pub fn execute_withdrawal(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
-    passphrase: String,
+    id: String,
 ) -> Result<Response, ContractError> {
-    let pool = DEPOSITORS.load(deps.storage, (&info.sender.to_string(), &passphrase))?;
+    let pool = DEPOSITORS.load(deps.storage, (&info.sender.to_string(), &id))?;
     let aust_amount: Uint256 = pool.aust_amount.unwrap();
     let amount = pool.amount;
     if amount == Uint256::zero() {
@@ -108,7 +109,7 @@ pub fn execute_withdrawal(
         &claimable_reward(
             deps.as_ref(),
             _env.clone(),
-            passphrase.clone(),
+            id.clone(),
             info.sender.clone().to_string(),
         )
         .unwrap(),
@@ -126,8 +127,8 @@ pub fn execute_withdrawal(
         return Err(ContractError::NoBalance {});
     } 
 
-    DEPOSITORS.remove(deps.storage, (&info.sender.to_string(), &passphrase));
-    BENEFICIARIES.remove(deps.storage, (&pool.beneficiary_addr, &passphrase));
+    DEPOSITORS.remove(deps.storage, (&info.sender.to_string(), &id));
+    BENEFICIARIES.remove(deps.storage, (&pool.beneficiary_addr, &id));
 
     redeem(
         deps.as_ref(),
@@ -183,7 +184,7 @@ pub fn deposit(
         .add_attribute("action", "deposit")
         .add_attribute("sender", info.sender.to_string())
         .add_attribute("amount", aust_amount.clone().to_string())
-        .add_attribute("passphrase", &config.deposit_count.to_string())
+        .add_attribute("id", &config.deposit_count.to_string())
         .add_attribute("exchange_rate_prev", epoch_state.exchange_rate.to_string()))
 
 }

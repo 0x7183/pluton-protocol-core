@@ -4,8 +4,6 @@ use cosmwasm_std::{StdError, StdResult};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::state::PoolInfo;
-
 #[derive(Serialize, Deserialize, JsonSchema)]
 pub struct InstantiateMsg {
     pub contract: String,
@@ -40,7 +38,7 @@ pub enum ExecuteMsg {
     /// Withdrawal is a base message to move tokens to another account without triggering actions
     Withdrawal {
 
-        passphrase: String,
+        id: String,
     },
     // Deposit to the account
     Deposit {
@@ -54,19 +52,26 @@ pub enum ExecuteMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
-    /// Returns the current balance of the given address, 0 if unset.
-    /// Return type: BalanceResponse.
+    // return all the incoming donations/payments with id
     BeneficiaryBalance {
-        address: String,
-        passphrase: String,
-    },
-    DepositorBalance {
-        address: String,
-        passphrase: String,
+        address: String, // beneficiary address
     },
 
-    Balance {
-        address: String,
+    // return all the outgoing donations/payments with id
+    DepositorBalance {
+        address: String, // depositor address
+    },
+
+    // return a single incoming donation/payments with interest
+    Incoming {
+        address: String, // beneficiary address
+        id: String,
+    },
+
+    // return a single outgoing donation/payment
+    Outgoing {
+        address: String, // depositor address
+        id: String,
     }
 }
 
@@ -92,9 +97,4 @@ pub struct BeneficiariesResponse{
     pub beneficiary_amount: Uint256,
     pub amount: Uint256,
     pub claimable: Uint256,
-}
-
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
-pub struct TestResponse {
-    pub test: Vec<PoolInfo>,
 }

@@ -8,6 +8,7 @@ use cw_storage_plus::{Item, Map};
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
 pub struct PoolInfo {
+    pub id: String,
     pub amount: Uint256,
     pub denom: String,
     pub aust_amount: Option<Uint256>,
