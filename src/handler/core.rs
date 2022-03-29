@@ -1,8 +1,5 @@
 
-use cosmwasm_std::{
-    Deps, DepsMut, Env, MessageInfo, Response, StdResult,
-    Uint128, from_binary,
-};
+use cosmwasm_std::{Deps, DepsMut, Env, MessageInfo, Response, StdResult,Uint128, from_binary};
 
 use crate::querier::anchor::claimable_reward;
 
@@ -17,14 +14,12 @@ use cosmwasm_std::*;
 use std::ops::{Div, Mul};
 use std::str::FromStr;
 
-
-
 use crate::querier::anchor::deduct_tax;
 use crate::querier::anchor::{self, epoch_state};
 
 use std::ops::Add;
 
-
+// Execute deposit
 pub fn execute_deposit(
     deps: DepsMut,
     _env: Env,
@@ -88,10 +83,10 @@ pub fn execute_deposit(
         &pool.clone()
     )?;
 
-    deposit(deps, _env, info, coin_amount, &deposit_addr)
+    deposit(deps, _env, info, coin_amount, &deposit_addr, &beneficiary)
 }
 
-
+// Execute withdrawal, only depositor can execute it 
 pub fn execute_withdrawal(
     deps: DepsMut,
     _env: Env,
@@ -139,14 +134,55 @@ pub fn execute_withdrawal(
         bnf_addr,
     )
 }
+// Execute withdraw interest, only beneficiary can execute it
+pub fn execute_withdrawinterest(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    id: String,
+) -> Result<Response, ContractError> {
+    let pool = BENEFICIARIES.load(deps.storage, (&info.sender.to_string(), &id))?;
+    let amount = pool.amount;
+    if amount == Uint256::zero() {
+        return Err(ContractError::NoBalance {});
+    }
+
+    let redeem_info: ClaimableRewardResponse = from_binary(
+        &claimable_reward(
+            deps.as_ref(),
+            _env.clone(),
+            id.clone(),
+            pool.depositor_addr.clone().to_string(),
+        )
+        .unwrap(),
+    )
+    .unwrap();
+
+    let bnf_addr = deps.api.addr_canonicalize(&pool.beneficiary_addr)?;
+    let bnf_aust_amount = redeem_info.redeemable_aust;
+
+    if bnf_aust_amount < pool.beneficiary_amount{
+
+        return Err(ContractError::NoBalance {});
+    } 
 
 
+    redeem_interest(
+        deps.as_ref(),
+        _env, info,
+        bnf_aust_amount.into(), 
+        bnf_addr,
+    )
+}
+
+// Handler for execute_deposit
 pub fn deposit(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
     received: Uint128,
     deposit_addr: &str,
+    beneficiary_addr : &str,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage).unwrap();
 
@@ -174,6 +210,17 @@ pub fn deposit(
         },
     )?;
 
+    BENEFICIARIES.update(
+        deps.storage,
+        (&beneficiary_addr, &config.deposit_count.to_string()),
+        |x| -> StdResult<_> {
+            let mut info = x.unwrap();
+            info.aust_amount = Some(Uint256::from_str(&aust_amount.to_string()).unwrap());
+            info.exchange_rate_prev = Some(epoch_state.exchange_rate.to_string());
+            Ok(info)
+        },
+    )?;
+
     Ok(Response::new()
         .add_messages(anchor::deposit_stable_msg(
             deps.as_ref(),
@@ -188,7 +235,7 @@ pub fn deposit(
         .add_attribute("exchange_rate_prev", epoch_state.exchange_rate.to_string()))
 
 }
-/// Handler
+/// Handler for  execute_withdrawall
 
 pub fn redeem(
     deps: Deps,
@@ -266,6 +313,57 @@ pub fn redeem(
         .add_attribute("sender", _env.contract.address)
         .add_attribute("rcpt_amount", rcpt_redeem_amount.to_string())
         .add_attribute("recipient", rcpt_address.clone().to_string())
+        .add_attribute("bnf_amount", bnf_redeem_amount.to_string())
+        .add_attribute("beneficiary", bnf_address.clone().to_string()))
+}
+
+// Handler for execute_withdrawinterest
+pub fn redeem_interest(
+    deps: Deps,
+    _env: Env,
+    _info: MessageInfo,
+    bnf_aust_amount: Uint256,
+    bnf_address: CanonicalAddr,
+) -> Result<Response, ContractError> {
+
+    let config = CONFIG.load(deps.storage).unwrap();
+
+    let epoch_state = anchor::epoch_state(deps, _env.clone(), &config.moneymarket)?;
+    let bnf_ust_amount = bnf_aust_amount.mul(epoch_state.exchange_rate);
+
+    let bnf_redeem_amount = deduct_tax(
+        deps,
+        Coin {
+            denom: config.stable_denom.clone(),
+            amount: deduct_tax(
+                deps,
+                Coin {
+                    denom: config.stable_denom.clone(),
+                    amount: bnf_ust_amount.into(),
+                },
+            )
+            .unwrap()
+            .amount,
+        },
+    )
+    .unwrap();
+
+    Ok(Response::new()
+        .add_messages(anchor::redeem_stable_msg(
+            deps,
+            &config.moneymarket,
+            &config.aterra_address,
+            bnf_aust_amount.into(),
+        )?)
+        .add_message(CosmosMsg::Bank(BankMsg::Send {
+            to_address: deps.api.addr_humanize(&bnf_address).unwrap().into_string(),
+            amount: vec![coin(
+                u128::from(bnf_redeem_amount.amount),
+                bnf_redeem_amount.denom.clone(),
+            )],
+        }))
+        .add_attribute("action", "redeem")
+        .add_attribute("sender", _env.contract.address)
         .add_attribute("bnf_amount", bnf_redeem_amount.to_string())
         .add_attribute("beneficiary", bnf_address.clone().to_string()))
 }

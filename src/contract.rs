@@ -1,9 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{
-    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
-};
+use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,};
 use crate::handler::core as Core;
+use crate::handler::core::execute_withdrawinterest;
 use crate::handler::query as Query;
 
 use crate::msg::ExecuteMsg;
@@ -52,9 +51,12 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::Withdrawal {id,} => Core::execute_withdrawal(deps, env, info, id),
-        ExecuteMsg::Deposit { denom, beneficiary, beneficiary_amount } => Core::execute_deposit(deps, env, info, denom, beneficiary, beneficiary_amount),
+
+        ExecuteMsg::Withdrawal{id,}=>Core::execute_withdrawal(deps,env,info,id),
+        ExecuteMsg::Deposit{denom,beneficiary,beneficiary_amount}=>Core::execute_deposit(deps,env,info,denom,beneficiary,beneficiary_amount),
+        ExecuteMsg::WithdrawInterest { id } => execute_withdrawinterest(deps, env, info, id), 
     }
+
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

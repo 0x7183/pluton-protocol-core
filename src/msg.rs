@@ -35,17 +35,22 @@ fn is_valid_name(name: &str) -> bool {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
-    /// Withdrawal is a base message to move tokens to another account without triggering actions
+    /// Withdrawal is a base message to withdraw deposit and interest, only depositor can execute it
     Withdrawal {
 
         id: String,
     },
-    // Deposit to the account
+    // Deposit is a base message to deposit into the smart contract
     Deposit {
         denom: String,
         beneficiary: String,
         beneficiary_amount: Uint256,
     },
+
+    // Withdraw is a base message to withdraw interest, only beneficiary can execute it
+    WithdrawInterest {
+        id: String,
+    }
 
 }
 
