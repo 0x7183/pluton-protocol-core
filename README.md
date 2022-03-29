@@ -19,6 +19,11 @@ During the beta launch we will open two pools for these important projects:
 
 ### For Developers:
 
+### Testnet address
+
+```
+terra14e0u4xwmgvq28x3fwszhue3hx4w8la3rng3rxr
+```
 #### Query
 
 Returns all outgoing donations/payments with id:
