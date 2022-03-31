@@ -7,7 +7,7 @@ This software is released without any guarantee, use it at your own risk.
 
 ## Functionality
 
-Pluton Protocol can be used to redirect interests from your Terra assets, in that way you can donate/pay using your yield.
+Pluton Protocol can be used to redirect interests from your Terra assets, in that way you can donate/pay using your yield, also, users would be able to create profiles with image and name, so that people can easy find and fund them.
 
 No fees are collected from the Smart Contract and we are NOT going to launch our own token.
 
@@ -22,7 +22,7 @@ During the beta launch we will open two pools for these important projects:
 ### Testnet address
 
 ```
-terra14e0u4xwmgvq28x3fwszhue3hx4w8la3rng3rxr
+terra1w73aaax36u9hqn4xqjvh3mhy3hygllztzu9emj
 ```
 #### Query
 
@@ -42,6 +42,10 @@ Return a specific outgoing donation/payment:
 ```
 {"outgoing" :{"address": "input_address", "id":"input_id"}}
 ```
+Return information for a specific profile: 
+```
+{"get_profile": {"address":"input_address"}}
+```
 #### Execute:
 
 Deposit:
@@ -59,6 +63,18 @@ Withdraw outgoing donations/payments, only depositor can execute it:
 {"withdrawal":{"id": "1"}}
 ```
 Withdraw incoming donations/payments, only beneficiary can execute it:
- ``` 
+``` 
 {"withdraw_interest":{"id": "1"}}  
- ```
+```
+ Register a new profile, only one profile per address:
+``` 
+{"register" : "img_url": "", "name": "0x7183", "description": "this is a test", "github": "https://github.com/", "linkedin": "https://linkedin.com/", "twitter": "https://twitter.com"}} 
+```
+ Modify an existing profile, only the owner can modify it:
+ ``` 
+ {"register" : "img_url": "", "name": "0x7183", "description": "this is a modify", "github": "https://github.com/", "linkedin": "https://linkedin.com/", "twitter": "https://twitter.com"}}  
+```
+ Delete an existing profile, only the owner can execute it:
+``` 
+{"delete": { }}	
+```
