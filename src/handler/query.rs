@@ -1,11 +1,11 @@
 
-use crate::msg::{DepositorsResponse, BeneficiariesResponse, ClaimableRewardResponse};
+use crate::msg::{DepositorsResponse, BeneficiariesResponse, ClaimableRewardResponse, ProfileResponse};
 
 use crate::querier::anchor::claimable_reward;
-use crate::state::{DEPOSITORS, BENEFICIARIES, PoolInfo};
+use crate::state::{DEPOSITORS, BENEFICIARIES, PoolInfo, PROFILES};
 
 
-use cosmwasm_std::{StdResult, Env, from_binary, Order};
+use cosmwasm_std::{StdResult, Env, from_binary, Order, Addr};
 use cosmwasm_std::Deps;
 
 
@@ -71,6 +71,21 @@ pub fn query_deposit(
         denom: info.denom,
     })
 
+}
+
+pub fn get_profile(deps: Deps, address: String) -> StdResult<ProfileResponse> {
+
+    let checked: Addr = deps.api.addr_validate(&address)?;
+    let profile = PROFILES.may_load(deps.storage, &checked)?.unwrap();
+
+    Ok(ProfileResponse {    
+        img_url: profile.img_url,
+        name: profile.name,
+        description: profile.description,
+        github: profile.github,
+        linkedin: profile.linkedin,
+        twitter: profile.twitter,
+    })
 }
 
 

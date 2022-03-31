@@ -1,1 +1,1 @@
-b8269f61758502c5c43900b2bc6b0a35701f70e5666365cc07fb0412b9ffc955  ./target/wasm32-unknown-unknown/release/pluton.wasm
+20a84dc3ae663398dd077eed28e8a67004e49b1fd97a42ed2e4c03d908e0988b  ./target/wasm32-unknown-unknown/release/pluton.wasm

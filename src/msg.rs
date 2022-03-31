@@ -50,7 +50,30 @@ pub enum ExecuteMsg {
     // Withdraw is a base message to withdraw interest, only beneficiary can execute it
     WithdrawInterest {
         id: String,
-    }
+    },
+
+    // Register is a base message to register a new profile, only one profile per address
+    Register {
+        img_url: String,
+        name: String,
+        description: String,
+        github:  String,
+        linkedin: String,
+        twitter: String
+    },
+
+    // Modify is a base message to modify an existing profile, only the owner can execute it
+    Modify {
+        img_url: String,
+        name: String,
+        description: String,
+        github:  String,
+        linkedin: String,
+        twitter: String
+    },
+
+    // Delete is a base message to delete an existing profile, only the owner can execute it
+    Delete {},
 
 }
 
@@ -77,7 +100,9 @@ pub enum QueryMsg {
     Outgoing {
         address: String, // depositor address
         id: String,
-    }
+    },
+    // return profile info for address
+    GetProfile {address: String},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -102,4 +127,14 @@ pub struct BeneficiariesResponse{
     pub beneficiary_amount: Uint256,
     pub amount: Uint256,
     pub claimable: Uint256,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct ProfileResponse {
+    pub img_url: String,
+    pub name: String,
+    pub description: String,
+    pub github:  String,
+    pub linkedin: String,
+    pub twitter: String
 }

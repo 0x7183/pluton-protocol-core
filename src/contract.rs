@@ -4,6 +4,7 @@ use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response,
 use crate::handler::core as Core;
 use crate::handler::core::execute_withdrawinterest;
 use crate::handler::query as Query;
+use crate::handler::profile as Profile;
 
 use crate::msg::ExecuteMsg;
 use crate::msg::InstantiateMsg;
@@ -54,7 +55,10 @@ pub fn execute(
 
         ExecuteMsg::Withdrawal{id,}=>Core::execute_withdrawal(deps,env,info,id),
         ExecuteMsg::Deposit{denom,beneficiary,beneficiary_amount}=>Core::execute_deposit(deps,env,info,denom,beneficiary,beneficiary_amount),
-        ExecuteMsg::WithdrawInterest { id } => execute_withdrawinterest(deps, env, info, id), 
+        ExecuteMsg::WithdrawInterest { id } => execute_withdrawinterest(deps, env, info, id),
+        ExecuteMsg::Register {img_url,name, description,github,linkedin,twitter} => Profile::register(deps, info, img_url, name, description, github, linkedin, twitter),
+        ExecuteMsg::Modify { img_url,name, description,github,linkedin,twitter } => Profile::modify(deps, info, img_url, name, description, github, linkedin, twitter),
+        ExecuteMsg::Delete { } => Profile::delete(deps, info),
     }
 
 }
@@ -67,6 +71,6 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::DepositorBalance {address} => to_binary(&Query::query_depositor(deps, address)?),
         QueryMsg::Incoming { address, id } => to_binary(&Query::query_interest(deps, _env, address, id)?),
         QueryMsg::Outgoing { address, id } => to_binary(&Query::query_deposit(deps, address, id)?),
-        
+        QueryMsg::GetProfile {address} => to_binary(&Query::get_profile(deps, address)?),
     }
 }
