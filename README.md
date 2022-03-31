@@ -2,7 +2,7 @@
 
 ## Disclaimer
 
-This protocol was designed and implemented for a computer science thesis, thanks to [Toran777](https://github.com/toran777) for implementing the user interface.
+This protocol was designed and implemented for a computer science thesis, thanks to [toran777](https://github.com/toran777) for implementing the user interface.
 This software is released without any guarantee, use it at your own risk.
 
 ## Functionality
