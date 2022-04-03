@@ -93,13 +93,18 @@ pub fn execute_withdrawal(
     info: MessageInfo,
     id: String,
 ) -> Result<Response, ContractError> {
+
+    // Load data from maps
     let pool = DEPOSITORS.load(deps.storage, (&info.sender.to_string(), &id))?;
+    let config = CONFIG.load(deps.storage).unwrap();
+
     let aust_amount: Uint256 = pool.aust_amount.unwrap();
     let amount = pool.amount;
     if amount == Uint256::zero() {
         return Err(ContractError::NoBalance {});
     }
 
+    // Calculate claimable rewards
     let redeem_info: ClaimableRewardResponse = from_binary(
         &claimable_reward(
             deps.as_ref(),
@@ -117,11 +122,19 @@ pub fn execute_withdrawal(
     let rcpt_aust_amount = aust_amount.sub(bnf_aust_amount.into());
     let rcpt_addr = deps.api.addr_canonicalize(&pool.depositor_addr)?;
 
-    if bnf_aust_amount < pool.beneficiary_amount{
+    // Load current exchange rate for aust
+    let epoch_state = epoch_state(deps.as_ref(), _env.clone(), &config.moneymarket)?;
+    let exchange_rate_now = epoch_state.exchange_rate;
+
+    // Calculate ust amount
+    let bnf_ust_amount = exchange_rate_now.mul(bnf_aust_amount);
+
+    if bnf_ust_amount < pool.beneficiary_amount{
 
         return Err(ContractError::NoBalance {});
     } 
 
+    // Removing deposit from maps
     DEPOSITORS.remove(deps.storage, (&info.sender.to_string(), &id));
     BENEFICIARIES.remove(deps.storage, (&pool.beneficiary_addr, &id));
 
@@ -141,12 +154,15 @@ pub fn execute_withdrawinterest(
     info: MessageInfo,
     id: String,
 ) -> Result<Response, ContractError> {
+    // Load data from maps
     let pool = BENEFICIARIES.load(deps.storage, (&info.sender.to_string(), &id))?;
+    let config = CONFIG.load(deps.storage).unwrap();
+
     let amount = pool.amount;
     if amount == Uint256::zero() {
         return Err(ContractError::NoBalance {});
     }
-
+    // Calculate claimable rewards
     let redeem_info: ClaimableRewardResponse = from_binary(
         &claimable_reward(
             deps.as_ref(),
@@ -161,10 +177,42 @@ pub fn execute_withdrawinterest(
     let bnf_addr = deps.api.addr_canonicalize(&pool.beneficiary_addr)?;
     let bnf_aust_amount = redeem_info.redeemable_aust;
 
-    if bnf_aust_amount < pool.beneficiary_amount{
+    // Load current exchange rate for aust
+    let epoch_state = epoch_state(deps.as_ref(), _env.clone(), &config.moneymarket)?;
+    let exchange_rate_now = epoch_state.exchange_rate;
+
+    // Calculate ust amount
+    let bnf_ust_amount = exchange_rate_now.mul(bnf_aust_amount);
+
+    if bnf_ust_amount < pool.beneficiary_amount{
 
         return Err(ContractError::NoBalance {});
-    } 
+    }
+    
+    // Removing rewards claimed from total claimable
+    let new_beneficiary_amount = pool.beneficiary_amount - bnf_ust_amount;
+
+
+    // Update maps
+    DEPOSITORS.update(
+        deps.storage,
+        (&pool.depositor_addr, &id),
+        |x| -> StdResult<_> {
+            let mut info = x.unwrap();
+            info.beneficiary_amount = new_beneficiary_amount;
+            Ok(info)
+        },
+    )?;
+
+    BENEFICIARIES.update(
+        deps.storage,
+        (&pool.beneficiary_addr, &id),
+        |x| -> StdResult<_> {
+            let mut info = x.unwrap();
+            info.beneficiary_amount = new_beneficiary_amount;
+            Ok(info)
+        },
+    )?;
 
 
     redeem_interest(
