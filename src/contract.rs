@@ -52,13 +52,16 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-
-        ExecuteMsg::Withdrawal{id,}=>Core::execute_withdrawal(deps,env,info,id),
-        ExecuteMsg::Deposit{denom,beneficiary,beneficiary_amount}=>Core::execute_deposit(deps,env,info,denom,beneficiary,beneficiary_amount),
-        ExecuteMsg::WithdrawInterest { id } => execute_withdrawinterest(deps, env, info, id),
-        ExecuteMsg::Register {img_url,name, description,github,linkedin,twitter} => Profile::register(deps, info, img_url, name, description, github, linkedin, twitter),
-        ExecuteMsg::Modify { img_url,name, description,github,linkedin,twitter } => Profile::modify(deps, info, img_url, name, description, github, linkedin, twitter),
-        ExecuteMsg::Delete { } => Profile::delete(deps, info),
+        
+        // Execute msg for deposit handler
+        ExecuteMsg::Withdrawal{id,}=>Core::execute_withdrawal(deps, env, info, id),
+        ExecuteMsg::Deposit{denom,beneficiary,beneficiary_amount}=>Core::execute_deposit(deps, env, info,denom, beneficiary, beneficiary_amount),
+        ExecuteMsg::WithdrawInterest {id} => execute_withdrawinterest(deps, env, info, id),
+        
+        // Execute msg for profile handler
+        ExecuteMsg::Register {img_url, name, description, github, linkedin, twitter} => Profile::register(deps, info, img_url, name, description, github, linkedin, twitter),
+        ExecuteMsg::Modify {img_url, name, description, github, linkedin, twitter} => Profile::modify(deps, info, img_url, name, description, github, linkedin, twitter),
+        ExecuteMsg::Delete {} => Profile::delete(deps, info),
     }
 
 }
@@ -67,10 +70,13 @@ pub fn execute(
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         
-        QueryMsg::BeneficiaryBalance { address} => to_binary(&Query::query_beneficiary(deps, address)?),
+        // Query for deposit handler
+        QueryMsg::BeneficiaryBalance {address} => to_binary(&Query::query_beneficiary(deps, address)?),
         QueryMsg::DepositorBalance {address} => to_binary(&Query::query_depositor(deps, address)?),
-        QueryMsg::Incoming { address, id } => to_binary(&Query::query_interest(deps, _env, address, id)?),
-        QueryMsg::Outgoing { address, id } => to_binary(&Query::query_deposit(deps, address, id)?),
+        QueryMsg::Incoming {address, id} => to_binary(&Query::query_interest(deps, _env, address, id)?),
+        QueryMsg::Outgoing {address, id} => to_binary(&Query::query_deposit(deps, address, id)?),
+
+        // query for profile handler
         QueryMsg::GetProfile {address} => to_binary(&Query::get_profile(deps, address)?),
     }
 }
