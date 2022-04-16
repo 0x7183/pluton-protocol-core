@@ -1,0 +1,16 @@
+[
+    {
+        "msg": {"register" : {"img": "test", "name": "0x7183", "description": "this is a test", "github": "https://github.com/", "linkedin": "https://linkedin.com/", "twitter": "https://twitter.com"}},
+        "coin": {}
+    },
+    {
+        "msg": {"modify" : {"img": "test", "name": "0x7183", "description": "this is a modify", "github": "https://github.com/", "linkedin": "https://linkedin.com/", "twitter": "https://twitter.com"}},
+        "coin": {}
+    },
+
+    {
+        "msg": {"delete": {}},
+        "coin": {}
+    }
+
+]

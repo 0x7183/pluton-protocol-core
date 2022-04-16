@@ -1,0 +1,16 @@
+[
+    {
+        "msg": {"deposit": {"denom": "uusd","beneficiary": "terra13y64qvlkqxts8glpxdzkwcufdvycwunvv7gwh6","beneficiary_amount": "1"}},
+        "coin": {"uusd": 1000000}
+    },
+    {
+        "msg": {"withdrawal":{"id": "1"}},
+        "coin": {}
+    },
+
+    {
+        "msg": {"withdraw_interest":{"id": "1"}},
+        "coin": {}
+    }
+
+]
