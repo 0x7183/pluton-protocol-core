@@ -1,6 +1,7 @@
 import time
 import base64
 import sys
+import subprocess
 from terra_sdk.key.mnemonic import MnemonicKey
 from terra_sdk.client.lcd import LCDClient
 from terra_sdk.client.lcd.api.tx import CreateTxOptions
@@ -10,7 +11,7 @@ from terra_sdk.core.wasm import MsgStoreCode, MsgInstantiateContract, MsgExecute
 
 def initialize(wallet, terra, wasmfile, path):
 
-    file = open(path +"/initialize.txt", "r")
+    file = open("../../test/" + path +"/initialize.txt", "r")
     initializemsg= eval(file.read())[0]
     file.close()
 
@@ -21,7 +22,7 @@ def initialize(wallet, terra, wasmfile, path):
     store_code = MsgStoreCode(wallet.key.acc_address, file_bytes)
     store_code_tx = wallet.create_and_sign_tx(CreateTxOptions(msgs=[store_code]))
     store_code_tx_result = terra.tx.broadcast(store_code_tx)
-    print("[*] Contract stored")
+    print("[*] Contract stored\n")
 
     code_id = store_code_tx_result.logs[0].events_by_type["store_code"]["code_id"][0]
 
@@ -36,23 +37,23 @@ def initialize(wallet, terra, wasmfile, path):
     )
     instantiate_tx = wallet.create_and_sign_tx(CreateTxOptions(msgs=[instantiate]))
     instantiate_tx_result = terra.tx.broadcast(instantiate_tx)
-    print("[*] Contract instantiated")
+    print("[*] Contract instantiated\n")
 
     contract_address = instantiate_tx_result.logs[0].events_by_type[
         "instantiate_contract"
         ]["contract_address"][0]
 
-    print("[*] Contract address:" + str(contract_address))
+    print("[*] Contract address: " + str(contract_address + "\n"))
 
     return contract_address
 
 def debugSC(wallets, terra, contract_address, path):
 
-    file = open(path + "/execute.txt", "r")
+    file = open("../../test/" + path + "/execute.txt", "r")
     executeFile = eval(file.read())
     file.close()
 
-    file = open(path + "/query.txt", "r")
+    file = open("../../test/" + path + "/query.txt", "r")
     queryFile = eval(file.read())
     file.close()
     print("[+] Testing ExecuteMsg")
@@ -80,7 +81,7 @@ def debugSC(wallets, terra, contract_address, path):
         
 
     
-    print("\n\n[+] Testing QueryMsg")
+    print("\n[+] Testing QueryMsg")
 
     for query in queryFile:
         try:
@@ -94,10 +95,13 @@ def debugSC(wallets, terra, contract_address, path):
 
 if __name__ == "__main__":
 
-    wasmfile = sys.argv[1]
-    path = sys.argv[2]
+    path = sys.argv[1]
+    wasmfile = "./artifacts/" + sys.argv[2]
+    option = sys.argv[3]
     wallets = []
     print("[+] Starting the test")
+
+
     # Create client to communicate with testnet.
     terra = LCDClient(
         url="https://bombay-lcd.terra.dev/",
@@ -106,20 +110,28 @@ if __name__ == "__main__":
 
     # Initialize wallet with associated mnemonic key.
     
-    with open("mnemonics.txt", "r") as file:
+    with open("../../test/mnemonics.txt", "r") as file:
         mnemonics=file.read().splitlines()
     
     for mnemonic in mnemonics:
         mk = MnemonicKey(mnemonic=mnemonic)
         wallets.append(terra.wallet(mk))
 
-    print("[+] Your wallets:\n")
+    print("[+] Your wallets:")
     for wallet in wallets:
         print(wallet.key.acc_address)
-    
-    # Upload ad initialize contract
-    contract_address = initialize(wallets[0], terra, wasmfile, path)
-    
+
+    if option == "all":
+        print("\n[+] Compiling the contract")
+        subprocess.check_output("./build.sh", shell=True)
+        print("[*] Contract compiled")
+        # Upload ad initialize contract
+        contract_address = initialize(wallets[0], terra, wasmfile, path)
+    elif option.startswith("terra"):
+        contract_address = option
+    else:
+        print("\n[-] Error no contract address specified")
+        exit()
     # Test contract
     debugSC(wallets, terra, contract_address, path)
 

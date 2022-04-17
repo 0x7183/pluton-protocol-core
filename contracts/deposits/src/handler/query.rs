@@ -31,19 +31,17 @@ pub fn query_depositor(deps: Deps, address: String) -> Result<std::vec::Vec<(std
 }
 
 
-pub fn query_interest(deps: Deps, env: Env, address: String, id: String) -> StdResult<BeneficiariesResponse> {
+pub fn query_interest(deps: Deps, _env: Env, address: String, id: String) -> StdResult<BeneficiariesResponse> {
     let info = BENEFICIARIES
         .may_load(deps.storage, (address.to_string().as_str(), &id))?
         .unwrap();
     let rewards: ClaimableRewardResponse = from_binary(&claimable_reward(
                 deps,
-                env.clone(),
+                _env.clone(),
                 id.clone(),
                 info.depositor_addr.clone().to_string(),
-                )
-                .unwrap(),
-            )
-            .unwrap();
+                )?,
+            )?;
 
     Ok(BeneficiariesResponse {
         depositor_addr: info.depositor_addr,

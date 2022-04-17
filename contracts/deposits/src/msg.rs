@@ -67,6 +67,16 @@ pub enum QueryMsg {
         address: String, // depositor address
     },
 
+    Outgoing {
+        address: String, 
+        id: String,
+    },
+
+    Incoming {
+        address: String, 
+        id: String,
+    },
+
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

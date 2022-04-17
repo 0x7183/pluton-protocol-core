@@ -8,10 +8,9 @@ use crate::msg::ClaimableRewardResponse;
 use crate::state::{PoolInfo, CONFIG, DEPOSITORS, BENEFICIARIES};
 
 use cosmwasm_bignumber::{Uint256};
-use std::ops::Sub;
 
 use cosmwasm_std::*;
-use std::ops::{Div, Mul};
+use std::ops::{Div, Mul, Sub};
 use std::str::FromStr;
 
 use crate::querier::anchor::deduct_tax;
@@ -111,10 +110,8 @@ pub fn execute_withdrawal(
             _env.clone(),
             id.clone(),
             info.sender.clone().to_string(),
-        )
-        .unwrap(),
-    )
-    .unwrap();
+        )?,
+    )?;
 
     let bnf_addr = deps.api.addr_canonicalize(&pool.beneficiary_addr)?;
     let bnf_aust_amount = redeem_info.redeemable_aust;
@@ -158,6 +155,8 @@ pub fn execute_withdrawinterest(
     let pool = BENEFICIARIES.load(deps.storage, (&info.sender.to_string(), &id))?;
     let config = CONFIG.load(deps.storage).unwrap();
 
+    let aust_amount: Uint256 = pool.aust_amount.unwrap();
+
     let amount = pool.amount;
     if amount == Uint256::zero() {
         return Err(ContractError::NoBalance {});
@@ -169,10 +168,8 @@ pub fn execute_withdrawinterest(
             _env.clone(),
             id.clone(),
             pool.depositor_addr.clone().to_string(),
-        )
-        .unwrap(),
-    )
-    .unwrap();
+        )?,
+    )?;
 
     let bnf_addr = deps.api.addr_canonicalize(&pool.beneficiary_addr)?;
     let bnf_aust_amount = redeem_info.redeemable_aust;
@@ -184,22 +181,22 @@ pub fn execute_withdrawinterest(
     // Calculate ust amount
     let bnf_ust_amount = exchange_rate_now.mul(bnf_aust_amount);
 
+    // Check if the amount of withdrawable interest is greater then lock amount
     if bnf_ust_amount < pool.beneficiary_amount{
 
         return Err(ContractError::NoBalance {});
     }
+
+    let new_aust_amount = aust_amount.sub(bnf_aust_amount);
     
-    // Removing rewards claimed from total claimable
-    let new_beneficiary_amount = pool.beneficiary_amount - bnf_ust_amount;
-
-
-    // Update maps
+    // Update maps with new aust amount and unlock deposit
     DEPOSITORS.update(
         deps.storage,
         (&pool.depositor_addr, &id),
         |x| -> StdResult<_> {
             let mut info = x.unwrap();
-            info.beneficiary_amount = new_beneficiary_amount;
+            info.beneficiary_amount = Uint256::zero();
+            info.aust_amount = Some(Uint256::from_str(&new_aust_amount.to_string()).unwrap());
             Ok(info)
         },
     )?;
@@ -209,7 +206,8 @@ pub fn execute_withdrawinterest(
         (&pool.beneficiary_addr, &id),
         |x| -> StdResult<_> {
             let mut info = x.unwrap();
-            info.beneficiary_amount = new_beneficiary_amount;
+            info.beneficiary_amount = Uint256::zero();
+            info.aust_amount = Some(Uint256::from_str(&new_aust_amount.to_string()).unwrap());
             Ok(info)
         },
     )?;
