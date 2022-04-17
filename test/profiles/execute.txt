@@ -1,16 +1,19 @@
 [
     {
         "msg": {"register" : {"img": "test", "name": "0x7183", "description": "this is a test", "github": "https://github.com/", "linkedin": "https://linkedin.com/", "twitter": "https://twitter.com"}},
-        "coin": {}
+        "coin": {},
+        "wallet": 0
     },
     {
         "msg": {"modify" : {"img": "test", "name": "0x7183", "description": "this is a modify", "github": "https://github.com/", "linkedin": "https://linkedin.com/", "twitter": "https://twitter.com"}},
-        "coin": {}
+        "coin": {},
+        "wallet": 0
     },
 
     {
         "msg": {"delete": {}},
-        "coin": {}
+        "coin": {},
+        "wallet": 0
     }
 
 ]

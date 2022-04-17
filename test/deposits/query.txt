@@ -1,6 +1,6 @@
 [
     {"depositor_balance":{"address": "terra1umw8s7n8pzcnwn6n5pnr9574gy739nuwy4rk2a"}},
-    {"beneficiary_balance":{"address": "terra1umw8s7n8pzcnwn6n5pnr9574gy739nuwy4rk2a"}},
-    {"incoming":{"address": "terra1umw8s7n8pzcnwn6n5pnr9574gy739nuwy4rk2a", "id":"1"}},
+    {"beneficiary_balance":{"address": "terra17kh0vpw4dsyzwzr6flyjv760put5s69dqxfmdy"}},
+    {"incoming":{"address": "terra17kh0vpw4dsyzwzr6flyjv760put5s69dqxfmdy", "id":"1"}},
     {"outgoing" :{"address": "terra1umw8s7n8pzcnwn6n5pnr9574gy739nuwy4rk2a", "id":"1"}}
 ]

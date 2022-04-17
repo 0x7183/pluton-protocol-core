@@ -14,7 +14,7 @@ def initialize(wallet, terra, wasmfile, path):
     initializemsg= eval(file.read())[0]
     file.close()
 
-    print("[+] Storing contract")
+    print("\n[+] Storing contract")
 
     contract_file = open(wasmfile, "rb")
     file_bytes = base64.b64encode(contract_file.read()).decode()
@@ -46,7 +46,7 @@ def initialize(wallet, terra, wasmfile, path):
 
     return contract_address
 
-def debugSC(wallet, terra, contract_address, path):
+def debugSC(wallets, terra, contract_address, path):
 
     file = open(path + "/execute.txt", "r")
     executeFile = eval(file.read())
@@ -59,34 +59,45 @@ def debugSC(wallet, terra, contract_address, path):
 
     for msg in executeFile:
 
-        execute = MsgExecuteContract(
-            wallet.key.acc_address,
-            contract_address,
-            msg.get("msg"),
-            msg.get("coin")
-        )
+        try:
 
-        execute_tx = wallet.create_and_sign_tx(CreateTxOptions(msgs=[execute]))
+            execute = MsgExecuteContract(
+                wallets[msg.get("wallet")].key.acc_address,
+                contract_address,
+                msg.get("msg"),
+                msg.get("coin")
+            )
 
-        execute_tx_result = terra.tx.broadcast(execute_tx)
-        print("\n\n[*] ExecuteMsg:\n" + str(msg.get("msg")) + "\nResult\n" + str(execute_tx_result))
-        time.sleep(10)
+            execute_tx = wallets[msg.get("wallet")].create_and_sign_tx(CreateTxOptions(msgs=[execute]))
+
+            execute_tx_result = terra.tx.broadcast(execute_tx)
+            print("\n\n[*] ExecuteMsg:\n" + str(msg.get("msg")) + "\nResult\n" + str(execute_tx_result) + "\n\n")
+            time.sleep(10)
+        
+        except:
+            print("Error in msg:\n" + str(msg))
+
+        
 
     
     print("\n\n[+] Testing QueryMsg")
 
     for query in queryFile:
+        try:
+            result = terra.wasm.contract_query(contract_address, query)
+            time.sleep(10)
+            print("\n[*] Query:\n" + str(query) + "\nResult:\n" + str(result) + "\n\n")
 
-        result = terra.wasm.contract_query(contract_address, query)
-        time.sleep(10)
-        print("\n[*] Query:\n" + str(query) + "\nResult:\n" + str(result))
+        except:
+            print("Error in query:\n" + str(query))
 
 
 if __name__ == "__main__":
 
     wasmfile = sys.argv[1]
     path = sys.argv[2]
-
+    wallets = []
+    print("[+] Starting the test")
     # Create client to communicate with testnet.
     terra = LCDClient(
         url="https://bombay-lcd.terra.dev/",
@@ -94,13 +105,22 @@ if __name__ == "__main__":
     )
 
     # Initialize wallet with associated mnemonic key.
-    mk = MnemonicKey(mnemonic="decline ignore great ostrich piano torch whip scorpion actor hard path riot ancient sleep zero dial present insane vivid embark combine pulse latin tuition")
-    wallet = terra.wallet(mk)
+    
+    with open("mnemonics.txt", "r") as file:
+        mnemonics=file.read().splitlines()
+    
+    for mnemonic in mnemonics:
+        mk = MnemonicKey(mnemonic=mnemonic)
+        wallets.append(terra.wallet(mk))
 
+    print("[+] Your wallets:\n")
+    for wallet in wallets:
+        print(wallet.key.acc_address)
+    
     # Upload ad initialize contract
-    contract_address = initialize(wallet, terra, wasmfile, path)
+    contract_address = initialize(wallets[0], terra, wasmfile, path)
     
     # Test contract
-    debugSC(wallet, terra, contract_address, path)
+    debugSC(wallets, terra, contract_address, path)
 
     print("[-] Ended check results")
