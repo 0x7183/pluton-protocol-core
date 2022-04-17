@@ -19,34 +19,35 @@ During the beta launch we will open two pools for these important projects:
 
 ### For Developers:
 
-### Testnet address
+#### Integration Testing
+
+Compile, upload, initialize and test the smart contracts
 
 ```
-terra1w73aaax36u9hqn4xqjvh3mhy3hygllztzu9emj
+git clone https://github.com/0x7183/pluton-protocol-core
 ```
-#### Query
+```
+cd pluton-protocol-core/contracts/<path>
+```
+```
+python3 ../../test/test.py <path> <file_name.wasm> <option>
+```
 
-Returns all outgoing donations/payments with id:
+#### E. g.
 ```
-{"depositor_balance":{"address": "input_address"}}
+cd pluton-protocol-core/contracts/deposits
 ```
-Returns all incoming donations/payments with id:
- ```
-{"beneficiary_balance":{"address": "input_address"}}
- ```
-Return a specific incoming donation/payment):
 ```
-{"incoming":{"address": "input_address", "id":"input_id"}}
+python3 ../../test/test.py deposits pluton.wasm all
 ```
-Return a specific outgoing donation/payment:
-```
-{"outgoing" :{"address": "input_address", "id":"input_id"}}
-```
-Return information for a specific profile: 
-```
-{"get_profile": {"address":"input_address"}}
-```
-#### Execute:
+
+### Testnet
+
+* Deposits address: `terra1wpyx7crglfu2w886y7wf9gkk3ak6l5layqf6zh`
+* Profiles address `terra1hz26vrex2j4j0gy585fl95guasrk0mru3u7cqe`
+
+
+#### Execute Deposits:
 
 Deposit:
 ```
@@ -66,6 +67,9 @@ Withdraw incoming donations/payments, only beneficiary can execute it:
 ``` 
 {"withdraw_interest":{"id": "1"}}  
 ```
+
+#### Execure Profiles
+
  Register a new profile, only one profile per address:
 ``` 
 {"register" : "img_url": "", "name": "0x7183", "description": "this is a test", "github": "https://github.com/", "linkedin": "https://linkedin.com/", "twitter": "https://twitter.com"}} 
@@ -78,3 +82,30 @@ Withdraw incoming donations/payments, only beneficiary can execute it:
 ``` 
 {"delete": { }}	
 ```
+
+#### Deposits Query
+
+Returns all outgoing donations/payments with id:
+```
+{"depositor_balance":{"address": "input_address"}}
+```
+Returns all incoming donations/payments with id:
+ ```
+{"beneficiary_balance":{"address": "input_address"}}
+ ```
+Return a specific incoming donation/payment, it may panic:
+```
+{"incoming":{"address": "input_address", "id":"input_id"}}
+```
+Return a specific outgoing donation/payment, it may panic:
+```
+{"outgoing" :{"address": "input_address", "id":"input_id"}}
+```
+
+#### Profiles Query
+
+Return information for a specific profile: 
+```
+{"get_profile": {"address":"input_address"}}
+```
+
