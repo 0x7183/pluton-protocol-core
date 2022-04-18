@@ -61,11 +61,11 @@ Deposit:
 ```
 Withdraw outgoing donations/payments, only depositor can execute it:
 ```
-{"withdrawal":{"id": "1"}}
+{"withdrawal":{"id": "input_id"}}
 ```
 Withdraw incoming donations/payments, only beneficiary can execute it:
 ``` 
-{"withdraw_interest":{"id": "1"}}  
+{"withdraw_interest":{"id": "input_id"}}  
 ```
 
 #### Execure Profiles
