@@ -130,8 +130,7 @@ pub fn claimable_reward(
     passphrase: String,
     sender: String,
 ) -> StdResult<Binary> {
-    let config = CONFIG.load(deps.storage).unwrap();
-
+    let config = CONFIG.load(deps.storage)?;
     let pool = DEPOSITORS.load(deps.storage, (&sender.to_string(), &passphrase))?;
 
     let epoch_state = epoch_state(deps, _env, &config.moneymarket)?;
@@ -144,7 +143,7 @@ pub fn claimable_reward(
         sender.clone(),
     )?;
 
-    let exchange_rate_prev = Decimal256::from_str(&pool.exchange_rate_prev.unwrap()).unwrap();
+    let exchange_rate_prev = Decimal256::from_str(&pool.exchange_rate_prev)?;
     let exchange_rate_now = epoch_state.exchange_rate;
 
     let rewardable_rate = exchange_rate_now - exchange_rate_prev;

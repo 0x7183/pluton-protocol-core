@@ -1,7 +1,7 @@
 [
     {
         "msg": {"deposit": {"denom": "uusd","beneficiary": "terra17kh0vpw4dsyzwzr6flyjv760put5s69dqxfmdy","beneficiary_amount": "0"}},
-        "coin": {"uusd": 1000000000},
+        "coin": {"uusd": 10000000},
         "wallet": 0
     },
 

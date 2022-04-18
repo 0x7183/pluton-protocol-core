@@ -63,8 +63,8 @@ pub fn execute_deposit(
         id: new_deposit_count.to_string(),
         amount: Uint256::from(coin_amount),
         denom: stable_denom,
-        aust_amount: None,
-        exchange_rate_prev: None,
+        aust_amount: Uint256::zero(),
+        exchange_rate_prev: "0".to_string(),
         depositor_addr: deposit_addr.clone(),
         beneficiary_addr: beneficiary.clone(),
         beneficiary_amount: beneficiary_amount,
@@ -95,9 +95,9 @@ pub fn execute_withdrawal(
 
     // Load data from maps
     let pool = DEPOSITORS.load(deps.storage, (&info.sender.to_string(), &id))?;
-    let config = CONFIG.load(deps.storage).unwrap();
+    let config = CONFIG.load(deps.storage)?;
 
-    let aust_amount: Uint256 = pool.aust_amount.unwrap();
+    let aust_amount: Uint256 = pool.aust_amount;
     let amount = pool.amount;
     if amount == Uint256::zero() {
         return Err(ContractError::NoBalance {});
@@ -153,9 +153,9 @@ pub fn execute_withdrawinterest(
 ) -> Result<Response, ContractError> {
     // Load data from maps
     let pool = BENEFICIARIES.load(deps.storage, (&info.sender.to_string(), &id))?;
-    let config = CONFIG.load(deps.storage).unwrap();
+    let config = CONFIG.load(deps.storage)?;
 
-    let aust_amount: Uint256 = pool.aust_amount.unwrap();
+    let aust_amount: Uint256 = pool.aust_amount;
 
     let amount = pool.amount;
     if amount == Uint256::zero() {
@@ -196,7 +196,7 @@ pub fn execute_withdrawinterest(
         |x| -> StdResult<_> {
             let mut info = x.unwrap();
             info.beneficiary_amount = Uint256::zero();
-            info.aust_amount = Some(Uint256::from_str(&new_aust_amount.to_string()).unwrap());
+            info.aust_amount = Uint256::from_str(&new_aust_amount.to_string())?;
             Ok(info)
         },
     )?;
@@ -207,7 +207,7 @@ pub fn execute_withdrawinterest(
         |x| -> StdResult<_> {
             let mut info = x.unwrap();
             info.beneficiary_amount = Uint256::zero();
-            info.aust_amount = Some(Uint256::from_str(&new_aust_amount.to_string()).unwrap());
+            info.aust_amount = Uint256::from_str(&new_aust_amount.to_string())?;
             Ok(info)
         },
     )?;
@@ -230,7 +230,7 @@ pub fn deposit(
     deposit_addr: &str,
     beneficiary_addr : &str,
 ) -> Result<Response, ContractError> {
-    let config = CONFIG.load(deps.storage).unwrap();
+    let config = CONFIG.load(deps.storage)?;
 
     let epoch_state = epoch_state(deps.as_ref(), _env.clone(), &config.moneymarket)?;
 
@@ -250,8 +250,8 @@ pub fn deposit(
         (&deposit_addr, &config.deposit_count.to_string()),
         |x| -> StdResult<_> {
             let mut info = x.unwrap();
-            info.aust_amount = Some(Uint256::from_str(&aust_amount.to_string()).unwrap());
-            info.exchange_rate_prev = Some(epoch_state.exchange_rate.to_string());
+            info.aust_amount = Uint256::from_str(&aust_amount.to_string())?;
+            info.exchange_rate_prev = epoch_state.exchange_rate.to_string();
             Ok(info)
         },
     )?;
@@ -261,8 +261,8 @@ pub fn deposit(
         (&beneficiary_addr, &config.deposit_count.to_string()),
         |x| -> StdResult<_> {
             let mut info = x.unwrap();
-            info.aust_amount = Some(Uint256::from_str(&aust_amount.to_string()).unwrap());
-            info.exchange_rate_prev = Some(epoch_state.exchange_rate.to_string());
+            info.aust_amount = Uint256::from_str(&aust_amount.to_string())?;
+            info.exchange_rate_prev = epoch_state.exchange_rate.to_string();
             Ok(info)
         },
     )?;
@@ -293,7 +293,7 @@ pub fn redeem(
     bnf_address: CanonicalAddr,
 ) -> Result<Response, ContractError> {
 
-    let config = CONFIG.load(deps.storage).unwrap();
+    let config = CONFIG.load(deps.storage)?;
 
     let epoch_state = anchor::epoch_state(deps, _env.clone(), &config.moneymarket)?;
     let rcpt_ust_amount = rcpt_aust_amount.mul(epoch_state.exchange_rate);
@@ -309,12 +309,8 @@ pub fn redeem(
                     denom: config.stable_denom.clone(),
                     amount: rcpt_ust_amount.into(),
                 },
-            )
-            .unwrap()
-            .amount,
-        },
-    )
-    .unwrap();
+            )?.amount,},
+    )?;
 
     let bnf_ust_amount = bnf_aust_amount.mul(epoch_state.exchange_rate);
     let bnf_redeem_amount = deduct_tax(
@@ -327,12 +323,9 @@ pub fn redeem(
                     denom: config.stable_denom.clone(),
                     amount: bnf_ust_amount.into(),
                 },
-            )
-            .unwrap()
-            .amount,
+            )?.amount,
         },
-    )
-    .unwrap();
+    )?;
 
     Ok(Response::new()
         .add_messages(anchor::redeem_stable_msg(
@@ -342,14 +335,14 @@ pub fn redeem(
             aust_amount.into(),
         )?)
         .add_message(CosmosMsg::Bank(BankMsg::Send {
-            to_address: deps.api.addr_humanize(&rcpt_address).unwrap().into_string(),
+            to_address: deps.api.addr_humanize(&rcpt_address)?.into_string(),
             amount: vec![coin(
                 u128::from(rcpt_redeem_amount.amount),
                 rcpt_redeem_amount.denom.clone(),
             )],
         }))
         .add_message(CosmosMsg::Bank(BankMsg::Send {
-            to_address: deps.api.addr_humanize(&bnf_address).unwrap().into_string(),
+            to_address: deps.api.addr_humanize(&bnf_address)?.into_string(),
             amount: vec![coin(
                 u128::from(bnf_redeem_amount.amount),
                 bnf_redeem_amount.denom.clone(),
@@ -372,7 +365,7 @@ pub fn redeem_interest(
     bnf_address: CanonicalAddr,
 ) -> Result<Response, ContractError> {
 
-    let config = CONFIG.load(deps.storage).unwrap();
+    let config = CONFIG.load(deps.storage)?;
 
     let epoch_state = anchor::epoch_state(deps, _env.clone(), &config.moneymarket)?;
     let bnf_ust_amount = bnf_aust_amount.mul(epoch_state.exchange_rate);
@@ -387,12 +380,9 @@ pub fn redeem_interest(
                     denom: config.stable_denom.clone(),
                     amount: bnf_ust_amount.into(),
                 },
-            )
-            .unwrap()
-            .amount,
+            )?.amount,
         },
-    )
-    .unwrap();
+    )?;
 
     Ok(Response::new()
         .add_messages(anchor::redeem_stable_msg(
@@ -402,7 +392,7 @@ pub fn redeem_interest(
             bnf_aust_amount.into(),
         )?)
         .add_message(CosmosMsg::Bank(BankMsg::Send {
-            to_address: deps.api.addr_humanize(&bnf_address).unwrap().into_string(),
+            to_address: deps.api.addr_humanize(&bnf_address)?.into_string(),
             amount: vec![coin(
                 u128::from(bnf_redeem_amount.amount),
                 bnf_redeem_amount.denom.clone(),

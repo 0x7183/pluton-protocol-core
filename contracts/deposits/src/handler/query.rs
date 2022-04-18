@@ -3,8 +3,7 @@ use crate::msg::{DepositorsResponse, BeneficiariesResponse, ClaimableRewardRespo
 use crate::querier::anchor::claimable_reward;
 use crate::state::{DEPOSITORS, BENEFICIARIES, PoolInfo};
 
-
-use cosmwasm_std::{StdResult, Env, from_binary, Order};
+use cosmwasm_std::{StdResult, Env, from_binary, Order, StdError};
 use cosmwasm_std::Deps;
 
 
@@ -31,24 +30,22 @@ pub fn query_depositor(deps: Deps, address: String) -> Result<std::vec::Vec<(std
 }
 
 
-pub fn query_interest(deps: Deps, _env: Env, address: String, id: String) -> StdResult<BeneficiariesResponse> {
-    let info = BENEFICIARIES
-        .may_load(deps.storage, (address.to_string().as_str(), &id))?
-        .unwrap();
+pub fn query_interest(deps: Deps, _env: Env, address: String, id: String) -> Result<BeneficiariesResponse, StdError> {
+    let info = BENEFICIARIES.load(deps.storage, (address.to_string().as_str(), &id))?;
+
     let rewards: ClaimableRewardResponse = from_binary(&claimable_reward(
-                deps,
-                _env.clone(),
-                id.clone(),
-                info.depositor_addr.clone().to_string(),
-                )?,
-            )?;
+        deps,
+        _env.clone(),
+        id.clone(),
+        info.depositor_addr.clone().to_string(),
+        )?,
+    )?;
 
     Ok(BeneficiariesResponse {
         depositor_addr: info.depositor_addr,
         beneficiary_amount: info.beneficiary_amount,
         amount: info.amount,
         claimable: rewards.amount,
-       
     })
 }
 
@@ -57,9 +54,7 @@ pub fn query_deposit(
     address: String,
     id: String,
 ) -> StdResult<DepositorsResponse> {
-    let info = DEPOSITORS
-        .may_load(deps.storage, (address.to_string().as_str(), &id))?
-        .unwrap();
+    let info = DEPOSITORS.load(deps.storage, (address.to_string().as_str(), &id))?;
 
     Ok(DepositorsResponse {
         beneficiary_addr: info.beneficiary_addr,

@@ -9,9 +9,6 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
-    #[error("Cannot set to own account")]
-    CannotSetOwnAccount {},
-
     #[error("Invalid zero amount")]
     InvalidZeroAmount {},
 
@@ -21,15 +18,10 @@ pub enum ContractError {
     #[error("Pool: other denom except {denom:?} is not allowed")]
     NotAllowOtherDenoms { denom: String },
 
-    #[error("Pool: other action except {action:?} is not allowed")]
-    NotAllowOtherCw20ReceiveAction { action: String },
-
     #[error("Zero balance")]
     NoBalance {},
 
     #[error("Can not deposit")]
     InvalidDeposit {},
 
-    #[error("Minting cannot exceed the cap")]
-    CannotExceedCap {},
 }

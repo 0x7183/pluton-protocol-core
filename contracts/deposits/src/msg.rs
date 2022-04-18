@@ -91,7 +91,7 @@ pub struct ClaimableRewardResponse {
 pub struct DepositorsResponse {
     pub beneficiary_addr: String,
     pub amount: Uint256,
-    pub aust_amount: Option<Uint256>,
+    pub aust_amount: Uint256,
     pub denom: String,
 }
 
