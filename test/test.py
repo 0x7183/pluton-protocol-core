@@ -90,7 +90,7 @@ def debugSC(wallets, terra, contract_address, path):
             print("\n[*] Query:\n" + str(query) + "\nResult:\n" + str(result) + "\n\n")
 
         except:
-            print("Error in query:\n" + str(query))
+            print("\nError in query:\n" + str(query))
 
 
 if __name__ == "__main__":
